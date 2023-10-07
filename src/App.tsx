@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 
 export function App() {
@@ -38,8 +39,8 @@ function SidebarItem({ name }: { name: string }) {
 export function Home() {
   return (
     <>
-      <h1 className="mb-4 text-4xl">receita do dia!</h1>
-      <Card></Card>
+      <h1 className="mb-4 text-4xl">receita aleatória:</h1>
+      <FullRecipe />
     </>
   )
 }
@@ -68,51 +69,155 @@ export function SearchBar({ text, onTextChange, onClick, placeholder }: { text: 
 }
 
 export function SearchByIngredient() {
+  const ingredients = INGREDIENTS;
+  const [filterText, setFilterText] = useState('');
+
   return (
     <>
-      <h1 className="mb-4 text-4xl">ingredientes</h1>
-      <Card></Card>
+      <h1 className="mb-4 text-4xl">igrediente principal</h1>
+      <SearchBar text={filterText} onTextChange={setFilterText} />
+      <IngredientList ingredients={ingredients} filterText={filterText} />
     </>
   )
 }
 
 export function SearchByName() {
+  const [text, setText] = useState('');
+
   return (
     <>
       <h1 className="mb-4 text-4xl">nome</h1>
-      <Card></Card>
+      <SearchBar text={text} onTextChange={setText} onClick={() => { }} />
     </>
   )
 }
 
 export function SearchByFirstLetter() {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
   return (
     <>
       <h1 className="mb-4 text-4xl">primeira letra</h1>
-      <Card></Card>
+      <div className="flex flex-wrap max-w-screen-md mt-6">
+        {
+          alphabet.map((letter) =>
+          (<Link key={letter} className="gap-2 px-1 pt-2 m-2 text-2xl text-center transition ease-in-out rounded-sm cursor-pointer w-14 aspect-square hover:bg-zinc-300 hover:text-stone-800" to={`${letter}`}>
+            {letter}
+          </Link>)
+          )
+        }
+      </div>
     </>
   )
 }
 
-export function Card() {
+export function RecipeList() {
+  const recipes = RECEITAS;
+
   return (
-    <div className="max-w-sm overflow-hidden rounded shadow-lg bg-zinc-950">
-      <img className="w-full" src="https://placekitten.com/300/300" alt="Sunset in the mountains" />
+    <div className="flex flex-wrap gap-4 my-6">
+      {recipes.map((recipe) => (<RecipeCard key={recipe.idMeal} recipe={recipe} />))}
+    </div>
+  )
+}
+
+export function FullRecipe() {
+  const recipe = RECEITAS[0];
+
+  const ingredients = [];
+  for (let i = 1; i <= 20; i++) {
+    const ingredient = recipe[`strIngredient${i}`];
+    const measure = recipe[`strMeasure${i}`];
+
+    if (ingredient && measure) {
+      ingredients.push(`${ingredient} - ${measure}`);
+    } else if (ingredient) {
+      ingredients.push(ingredient);
+    }
+  }
+
+  return (
+    <div className="m-auto max-w-max">
+      <h1 className="mb-4 font-serif text-6xl text-center">{recipe.strMeal}</h1>
+      {
+        recipe.strArea ?
+          <h2 className="mb-2 text-lg text-center text-zinc-200">{recipe.strArea}</h2>
+          : null
+      }
+      <img src={recipe.strMealThumb} alt={recipe.strMeal} />
+      <hr className="h-px my-6 border-0 bg-zinc-50" />
+      <div className="max-w-prose">
+        <h2 className="mb-2 font-serif text-2xl text-zinc-50">igredientes</h2>
+        <ul className="mb-6 list-disc list-inside">
+          {
+            ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)
+          }
+        </ul>
+        <h2 className="mb-2 font-serif text-2xl text-zinc-50">instruções</h2>
+        <ol className="mb-6 list-decimal list-inside marker:text-zinc-400">
+          {recipe.strInstructions.split('\r\n').map((paragraph, index) => <li key={index}>{paragraph}</li>)}
+        </ol>
+      </div>
+    </div>
+  )
+}
+
+export function IngredientList({ ingredients, filterText }: { ingredients?: Ingredient[], filterText?: string; }) {
+  if (!ingredients) {
+    ingredients = INGREDIENTS;
+  }
+
+  return (
+    <div className="flex flex-col flex-wrap gap-4 my-6 max-w-fit">
+      {
+        ingredients
+          .filter((ingredient) => filterText ? ingredient.strIngredient.toLowerCase().includes(filterText.toLowerCase()) : true)
+          .map((ingredient) => <IngredientButton key={ingredient.idIngredient} ingredientName={ingredient.strIngredient} ingredientId={ingredient.idIngredient} />)
+      }
+    </div>
+  )
+}
+
+export function IngredientButton({ ingredientName, ingredientId }: { ingredientName: string; ingredientId: string; }) {
+  return (
+    <Link className="gap-2 px-4 py-1 transition ease-in-out rounded-sm cursor-pointer hover:bg-zinc-300 hover:text-stone-800" to={`${ingredientId}`}>
+      {ingredientName}
+    </Link>
+  )
+}
+
+export function RecipeCard({ recipe }: { recipe: Recipe }) {
+  const tags = [
+    recipe?.strArea,
+    recipe?.strCategory,
+    ...(recipe?.strTags?.split(',') || []),
+  ]
+
+  return (
+    <div className="overflow-hidden rounded shadow-lg w-80 bg-zinc-950">
+      {
+        recipe?.strMealThumb
+          ? <img className="w-full aspect-square" src={recipe?.strMealThumb} alt={recipe?.strMeal} />
+          : <div className="w-full p-12 text-center aspect-square bg-zinc-800">sem foto</div>
+      }
       <div className="px-6 py-4">
-        <div className="mb-2 text-xl font-bold">The Coldest Sunset</div>
-        <p className="text-base text-stone-200">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptatibus quia, nulla! Maiores et perferendis eaque, exercitationem praesentium nihil.
+        <div className="mb-2 text-xl font-bold">{recipe?.strMeal}</div>
+        <p className="text-base text-stone-200 line-clamp-5">
+          {recipe?.strInstructions}
         </p>
+        <Link className="text-zinc-400" to={`/id/${recipe?.idMeal}`}>
+          ver receita completa
+        </Link>
       </div>
       <div className="max-w-xs px-6 py-4 truncate">
-        <a href="" className="text-zinc-400">
-          testsafawfawsfawfasfawfasfawfawsfawfasfawfawsfawfasfawfawfawsfawfafasf
+        <a href={recipe?.strYoutube ?? undefined} className="text-zinc-400">
+          ver receita no YouTube
         </a>
       </div>
       <div className="px-6 pt-4 pb-2">
-        <span className="inline-block px-3 py-1 mb-2 mr-2 text-sm font-semibold rounded-full text-stone-200 bg-zinc-900">#photography</span>
-        <span className="inline-block px-3 py-1 mb-2 mr-2 text-sm font-semibold rounded-full text-stone-200 bg-zinc-900">#travel</span>
-        <span className="inline-block px-3 py-1 mb-2 mr-2 text-sm font-semibold rounded-full text-stone-200 bg-zinc-900">#winter</span>
+        {
+          tags.map((tag) => <span key={tag} className="inline-block px-3 py-1 mb-2 mr-2 text-sm font-semibold rounded-full text-stone-200 bg-zinc-900">{tag}</span>)
+        }
       </div>
     </div>
   )
