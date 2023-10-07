@@ -1,6 +1,8 @@
+const api_key = 1;
+const route = `https://www.themealdb.com/api/json/v1/${api_key}`;
 
 async function getRecipeById(id: string) {
-    const response = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+    const response = await fetch(`${route}/lookup.php?i=${id}`);
     if (response.ok) {
         const data = await response.json();
         return data.meals[0];
@@ -9,7 +11,7 @@ async function getRecipeById(id: string) {
 }
 
 export async function getRecipeRandom() {
-    const response = await fetch(`https://www.themealdb.com/api/json/v1/1/random.php`);
+    const response = await fetch(`${route}/random.php`);
     if (response.ok) {
         const data = await response.json();
         return data.meals[0];
@@ -18,7 +20,7 @@ export async function getRecipeRandom() {
 }
 
 async function getRecipeByIngredient(ingredient: string) {
-    const response = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`);
+    const response = await fetch(`${route}/filter.php?i=${ingredient}`);
     if (response.ok) {
         const data = await response.json();
         return data.meals;
@@ -27,7 +29,7 @@ async function getRecipeByIngredient(ingredient: string) {
 }
 
 async function getRecipeByName(name: string) {
-    const response = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${name}`);
+    const response = await fetch(`${route}/search.php?s=${name}`);
     if (response.ok) {
         const data = await response.json();
         return data.meals;
@@ -36,7 +38,7 @@ async function getRecipeByName(name: string) {
 }
 
 async function getRecipeByLetter(letter: string) {
-    const response = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?f=${letter}`);
+    const response = await fetch(`${route}/search.php?f=${letter}`);
     if (response.ok) {
         const data = await response.json();
         return data.meals;
@@ -66,7 +68,7 @@ export async function RecipeLoader({ params }: any) {
 }
 
 async function getIngredients() {
-    const response = await fetch(`https://www.themealdb.com/api/json/v1/1/list.php?i=list`);
+    const response = await fetch(`${route}/list.php?i=list`);
     if (response.ok) {
         return await response.json();
     } else {
