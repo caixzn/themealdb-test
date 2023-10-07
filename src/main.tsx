@@ -65,7 +65,8 @@ const router = createBrowserRouter([
       },
       {
         path: "id/:id",
-        element: <FullRecipe />
+        element: <FullRecipe />,
+        loader: RecipeLoader
       }
     ]
   }

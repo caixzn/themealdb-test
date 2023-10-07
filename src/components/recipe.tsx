@@ -1,6 +1,14 @@
 import { Link, useLoaderData } from "react-router-dom";
 
 export function FullRecipe({ recipe }: { recipe?: Recipe }) {
+  if (!recipe) {
+    const data = useLoaderData() as Recipe;
+    if (!data) {
+      return "receita não encontrada";
+    }
+    recipe = data;
+  }
+
   const ingredients = [];
   for (let i = 1; i <= 20; i++) {
     const ingredient = (recipe as any)[`strIngredient${i}`];
