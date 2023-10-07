@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { App, Home, SearchByFirstLetter, SearchByIngredient, SearchByName } from './App.tsx'
+import { App, FullRecipe, Home, RecipeList, SearchByFirstLetter, SearchByIngredient, SearchByName } from './App.tsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import ErrorPage from './error-page.tsx'
@@ -29,16 +29,20 @@ const router = createBrowserRouter([
       },
       {
         path: "primeira_letra/:letter",
-        element: <SearchByFirstLetter />,
+        element: <RecipeList />,
       },
       {
-        path: "ingredientes",
+        path: "igrediente_principal",
         element: <SearchByIngredient />,
       },
       {
-        path: "ingredientes/:ingredients",
+        path: "igrediente_principal/:ingredient",
         element: <SearchByIngredient />,
       },
+      {
+        path: "id/:id",
+        element: <FullRecipe />
+      }
     ]
   }
 ])
