@@ -1,10 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { App, FilterableIngredientList, Home, IngredientLoader, RecipeLoader, SearchByFirstLetter, SearchByIngredient, SearchByName } from './App.tsx'
+import { App, FilterableIngredientList, Home, SearchByFirstLetter, SearchByIngredient, SearchByName } from './App.tsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import ErrorPage from './error-page.tsx'
 import { FullRecipe, RecipeList } from './components/recipe.tsx'
+import { IngredientLoader, RecipeLoader } from './api/fetch.ts'
 
 const router = createBrowserRouter([
   {
