@@ -1,9 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { App, FullRecipe, Home, RecipeList, SearchByFirstLetter, SearchByIngredient, SearchByName } from './App.tsx'
+import { App, FilterableIngredientList, Home, IngredientLoader, RecipeLoader, SearchByFirstLetter, SearchByIngredient, SearchByName } from './App.tsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import ErrorPage from './error-page.tsx'
+import { FullRecipe, RecipeList } from './components/recipe.tsx'
 
 const router = createBrowserRouter([
   {
@@ -29,15 +30,23 @@ const router = createBrowserRouter([
       },
       {
         path: "primeira_letra/:letter",
-        element: <RecipeList />,
+        element: <SearchByFirstLetter />,
       },
       {
         path: "igrediente_principal",
         element: <SearchByIngredient />,
-      },
-      {
-        path: "igrediente_principal/:ingredient",
-        element: <SearchByIngredient />,
+        children: [
+          {
+            path: "",
+            element: <FilterableIngredientList />,
+            loader: IngredientLoader
+          },
+          {
+            path: ":ingredient",
+            element: <RecipeList />,
+            loader: RecipeLoader,
+          }
+        ]
       },
       {
         path: "id/:id",

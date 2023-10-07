@@ -1,11 +1,16 @@
-import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, Outlet, useLoaderData, useLocation } from 'react-router-dom';
+import { SearchBar } from './components/search-bar';
+import { IngredientList } from './components/ingredient';
+import { FullRecipe } from './components/recipe';
+import { Sidebar } from './components/sidebar';
+import { get } from 'http';
 
 export function App() {
   return (
     <div className="flex flex-col md:flex-row md:min-h-screen">
       <aside className="flex-shrink-0 p-4 md:w-56 bg-zinc-950">
-      <Sidebar />
+        <Sidebar />
       </aside>
       <main className="flex-grow m-5">
         <Outlet />
@@ -14,67 +19,127 @@ export function App() {
   )
 }
 
-function Sidebar() {
-  const items = ['nome', 'primeira letra', 'igrediente principal'];
-
-  return (
-    <>
-      <h2 className="mt-2 mb-6 text-xl font-bold"><a href="/">busca de receitas</a></h2>
-      <p className="mb-2 text-sm text-zinc-300">buscar por...</p>
-      <ul className="flex flex-col gap-2">
-        {items.map((item) => <SidebarItem key={item.replace(' ', '_')} name={item} />)}
-      </ul>
-    </>
-  )
+async function getRecipeById(id: string) {
+  const response = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+  if (response.ok) {
+    const data = await response.json();
+    return data.meals[0];
+  }
+  return null;
 }
 
-function SidebarItem({ name }: { name: string }) {
-  return (
-    <Link className="relative flex items-center w-full gap-2 py-1 pl-2 transition ease-in-out rounded-sm cursor-pointer hover:bg-zinc-300 hover:text-stone-800" to={name.replace(' ', '_')}>
-        {name}
-      </Link>
-  )
+async function getRecipeRandom() {
+  const response = await fetch(`https://www.themealdb.com/api/json/v1/1/random.php`);
+  if (response.ok) {
+    const data = await response.json();
+    return data.meals[0];
+  }
+  return null;
+}
+
+async function getRecipeByIngredient(ingredient: string) {
+  const response = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`);
+  if (response.ok) {
+    const data = await response.json();
+    return data.meals;
+  }
+  return null;
+}
+
+async function getRecipeByName(name: string) {
+  const response = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${name}`);
+  if (response.ok) {
+    const data = await response.json();
+    return data.meals;
+  }
+  return null;
+}
+
+type RecipeParams = {
+  name: string;
+  letter: string;
+  ingredient: string;
+  id: string;
+}
+
+export async function RecipeLoader({ params }: any) {
+  let recipe: Recipe[] | Recipe;
+  switch (true) {
+    case params.id !== undefined:
+      recipe = await getRecipeById(params.id);
+      break;
+    case params.name !== undefined:
+      recipe = await getRecipeByName(params.name);
+      break;
+    case params.letter !== undefined:
+      recipe = await getRecipeByName(params.letter);
+      break;
+    case params.ingredient !== undefined:
+      recipe = await getRecipeByIngredient(params.ingredient);
+      break;
+    default:
+      recipe = await getRecipeRandom();
+  }
+  return recipe;
+}
+
+async function getIngredients() {
+  const response = await fetch(`https://www.themealdb.com/api/json/v1/1/list.php?i=list`);
+  if (response.ok) {
+    return await response.json();
+  } else {
+    throw new Error("Erro ao carregar ingredientes!");
+  }
 }
 
 export function Home() {
+  const [recipe, setRecipe] = useState<Recipe>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getRecipeRandom()
+      .then(r => setRecipe(r))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return "...";
+  }
+  if (!recipe) {
+    return "Erro ao carregar receita!";
+  }
+
   return (
     <>
       <h1 className="mb-4 text-4xl">receita aleatória:</h1>
-      <FullRecipe />
+      <FullRecipe recipe={recipe} />
     </>
   )
 }
 
-export function SearchBar({ text, onTextChange, onClick, placeholder }: { text: string; onTextChange: (text: string) => void; onClick?: () => void; placeholder?: string; }) {
-  return (
-    <div className="flex gap-2">
-      <input
-        className="flex-grow max-w-lg p-2 my-2 rounded-sm bg-zinc-950 text-stone-200"
-        type="text"
-        value={text}
-        placeholder={placeholder}
-        onChange={(e) => onTextChange(e.target.value)} />
-
-      {onClick !== undefined ?
-        (<button
-          className="relative self-center w-24 p-2 transition ease-in-out rounded-sm bg-zinc-950 hover:bg-zinc-300 hover:text-stone-800"
-          onClick={onClick}
-        >
-          buscar
-        </button>) : null
-      }
-
-    </div>
-  );
-}
-
 export function SearchByIngredient() {
-  const ingredients = INGREDIENTS;
-  const [filterText, setFilterText] = useState('');
+  const [ ingredient ] = useLocation().pathname.split('/').slice(-1);
 
   return (
     <>
-      <h1 className="mb-4 text-4xl">igrediente principal</h1>
+      <h1 className="mb-4 text-4xl">igrediente principal{`: ${ingredient.replace(/_/g, ' ')}` ?? ''}</h1>
+      <Outlet />
+    </>
+  )
+}
+
+export async function IngredientLoader() {
+  const { meals } = await getIngredients();
+  return meals;
+}
+
+export function FilterableIngredientList() {
+  const [filterText, setFilterText] = useState('');
+
+  const ingredients = useLoaderData() as Ingredient[];
+
+  return (
+    <>
       <SearchBar text={filterText} onTextChange={setFilterText} />
       <IngredientList ingredients={ingredients} filterText={filterText} />
     </>
@@ -110,139 +175,3 @@ export function SearchByFirstLetter() {
     </>
   )
 }
-
-export function RecipeList() {
-  const recipes = RECEITAS;
-
-  return (
-    <div className="flex flex-wrap gap-4 my-6">
-      {recipes.map((recipe) => (<RecipeCard key={recipe.idMeal} recipe={recipe} />))}
-    </div>
-  )
-}
-
-export function FullRecipe() {
-  const recipe = RECEITAS[0];
-
-  const ingredients = [];
-  for (let i = 1; i <= 20; i++) {
-    const ingredient = recipe[`strIngredient${i}`];
-    const measure = recipe[`strMeasure${i}`];
-
-    if (ingredient && measure) {
-      ingredients.push(`${ingredient} - ${measure}`);
-    } else if (ingredient) {
-      ingredients.push(ingredient);
-    }
-  }
-
-  return (
-    <div className="m-auto max-w-max">
-      <h1 className="mb-4 font-serif text-6xl text-center">{recipe.strMeal}</h1>
-      {
-        recipe.strArea ?
-          <h2 className="mb-2 text-lg text-center text-zinc-200">{recipe.strArea}</h2>
-          : null
-      }
-      <img src={recipe.strMealThumb} alt={recipe.strMeal} />
-      <hr className="h-px my-6 border-0 bg-zinc-50" />
-      <div className="max-w-prose">
-        <h2 className="mb-2 font-serif text-2xl text-zinc-50">igredientes</h2>
-        <ul className="mb-6 list-disc list-inside">
-          {
-            ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)
-          }
-        </ul>
-        <h2 className="mb-2 font-serif text-2xl text-zinc-50">instruções</h2>
-        <ol className="mb-6 list-decimal list-inside marker:text-zinc-400">
-          {recipe.strInstructions.split('\r\n').map((paragraph, index) => <li key={index}>{paragraph}</li>)}
-        </ol>
-      </div>
-    </div>
-  )
-}
-
-export function IngredientList({ ingredients, filterText }: { ingredients?: Ingredient[], filterText?: string; }) {
-  if (!ingredients) {
-    ingredients = INGREDIENTS;
-  }
-
-  return (
-    <div className="flex flex-col flex-wrap gap-4 my-6 max-w-fit">
-      {
-        ingredients
-          .filter((ingredient) => filterText ? ingredient.strIngredient.toLowerCase().includes(filterText.toLowerCase()) : true)
-          .map((ingredient) => <IngredientButton key={ingredient.idIngredient} ingredientName={ingredient.strIngredient} ingredientId={ingredient.idIngredient} />)
-      }
-    </div>
-  )
-}
-
-export function IngredientButton({ ingredientName, ingredientId }: { ingredientName: string; ingredientId: string; }) {
-  return (
-    <Link className="gap-2 px-4 py-1 transition ease-in-out rounded-sm cursor-pointer hover:bg-zinc-300 hover:text-stone-800" to={`${ingredientId}`}>
-      {ingredientName}
-    </Link>
-  )
-}
-
-export function RecipeCard({ recipe }: { recipe: Recipe }) {
-  const tags = [
-    recipe?.strArea,
-    recipe?.strCategory,
-    ...(recipe?.strTags?.split(',') || []),
-  ]
-
-  return (
-    <div className="overflow-hidden rounded shadow-lg w-80 bg-zinc-950">
-      {
-        recipe?.strMealThumb
-          ? <img className="w-full aspect-square" src={recipe?.strMealThumb} alt={recipe?.strMeal} />
-          : <div className="w-full p-12 text-center aspect-square bg-zinc-800">sem foto</div>
-      }
-      <div className="px-6 py-4">
-        <div className="mb-2 text-xl font-bold">{recipe?.strMeal}</div>
-        <p className="text-base text-stone-200 line-clamp-5">
-          {recipe?.strInstructions}
-        </p>
-        <Link className="text-zinc-400" to={`/id/${recipe?.idMeal}`}>
-          ver receita completa
-        </Link>
-      </div>
-      <div className="max-w-xs px-6 py-4 truncate">
-        <a href={recipe?.strYoutube ?? undefined} className="text-zinc-400">
-          ver receita no YouTube
-        </a>
-      </div>
-      <div className="px-6 pt-4 pb-2">
-        {
-          tags.map((tag) => <span key={tag} className="inline-block px-3 py-1 mb-2 mr-2 text-sm font-semibold rounded-full text-stone-200 bg-zinc-900">{tag}</span>)
-        }
-      </div>
-    </div>
-  )
-}
-
-type Recipe = {
-  idMeal: string;
-  strMeal: string;
-  strDrinkAlternate: string | null;
-  strCategory: string | null;
-  strArea: string | null;
-  strInstructions: string | null;
-  strMealThumb: string | null;
-  strTags: string | null;
-  strYoutube: string | null;
-  strSource: string | null;
-  strImageSource: string | null;
-  strCreativeCommonsConfirmed: string | null;
-  dateModified: string | null;
-} & Record<`${'strMeasure' | 'strIngredient'}${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`, string | null>;
-
-type Ingredient = {
-  idIngredient: string;
-  strIngredient: string;
-  strDescription: string | null;
-  strType: string | null;
-}
-
