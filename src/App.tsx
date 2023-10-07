@@ -2,9 +2,11 @@ import { Link, Outlet } from 'react-router-dom';
 
 export function App() {
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col md:flex-row md:min-h-screen">
+      <aside className="flex-shrink-0 p-4 md:w-56 bg-zinc-950">
       <Sidebar />
-      <main className="m-5 full">
+      </aside>
+      <main className="flex-grow m-5">
         <Outlet />
       </main>
     </div>
@@ -12,25 +14,24 @@ export function App() {
 }
 
 function Sidebar() {
-  const items = ['nome', 'primeira letra', 'ingredientes'];
+  const items = ['nome', 'primeira letra', 'igrediente principal'];
 
   return (
-    <aside className="p-4 w-52 bg-zinc-950">
-      <h2 className="mb-6 text-lg font-bold"><a href="/">busca de receitas</a></h2>
+    <>
+      <h2 className="mt-2 mb-6 text-xl font-bold"><a href="/">busca de receitas</a></h2>
+      <p className="mb-2 text-sm text-zinc-300">buscar por...</p>
       <ul className="flex flex-col gap-2">
-        {items.map((item) => <SidebarItem name={item} />)}
+        {items.map((item) => <SidebarItem key={item.replace(' ', '_')} name={item} />)}
       </ul>
-    </aside>
+    </>
   )
 }
 
 function SidebarItem({ name }: { name: string }) {
   return (
-    <li key={name.replace(' ', '_')}>
-      <Link className="relative flex items-center w-full gap-2 py-1 pl-2 transition ease-in-out rounded-sm cursor-pointer hover:bg-zinc-300 hover:text-stone-800" to={`/${name.replace(' ', '_')}`}>
+    <Link className="relative flex items-center w-full gap-2 py-1 pl-2 transition ease-in-out rounded-sm cursor-pointer hover:bg-zinc-300 hover:text-stone-800" to={name.replace(' ', '_')}>
         {name}
       </Link>
-    </li>
   )
 }
 
