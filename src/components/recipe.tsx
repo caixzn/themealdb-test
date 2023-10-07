@@ -3,8 +3,8 @@ import { Link, useLoaderData } from "react-router-dom";
 export function FullRecipe({ recipe }: { recipe?: Recipe }) {
   const ingredients = [];
   for (let i = 1; i <= 20; i++) {
-    const ingredient = recipe[`strIngredient${i}`];
-    const measure = recipe[`strMeasure${i}`];
+    const ingredient = (recipe as any)[`strIngredient${i}`];
+    const measure = (recipe as any)[`strMeasure${i}`];
 
     if (ingredient && measure) {
       ingredients.push(`${ingredient} - ${measure}`);
