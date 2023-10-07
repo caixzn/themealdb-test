@@ -45,11 +45,14 @@ export function Home() {
 }
 
 export function SearchByIngredient() {
-  const [ingredient] = useLocation().pathname.split('/').slice(-1);
+  let [ingredient] = useLocation().pathname.split('/').slice(-1);
+  if (ingredient === 'igrediente_principal') {
+    ingredient = '';
+  }
 
   return (
     <>
-      <h1 className="mb-4 text-4xl">igrediente principal{`: ${ingredient.replace(/_/g, ' ')}` ?? ''}</h1>
+      <h1 className="mb-4 text-4xl">igrediente principal{ingredient.length > 0 ? `: ${ingredient.replace(/_/g, ' ')}` : ''}</h1>
       <Outlet />
     </>
   )
