@@ -4,7 +4,6 @@ import { SearchBar } from './components/search-bar';
 import { IngredientList } from './components/ingredient';
 import { FullRecipe } from './components/recipe';
 import { Sidebar } from './components/sidebar';
-import { get } from 'http';
 
 export function App() {
   return (
@@ -55,11 +54,13 @@ async function getRecipeByName(name: string) {
   return null;
 }
 
-type RecipeParams = {
-  name: string;
-  letter: string;
-  ingredient: string;
-  id: string;
+async function getRecipeByLetter(letter: string) {
+  const response = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?f=${letter}`);
+  if (response.ok) {
+    const data = await response.json();
+    return data.meals;
+  }
+  return null;
 }
 
 export async function RecipeLoader({ params }: any) {
@@ -72,7 +73,7 @@ export async function RecipeLoader({ params }: any) {
       recipe = await getRecipeByName(params.name);
       break;
     case params.letter !== undefined:
-      recipe = await getRecipeByName(params.letter);
+      recipe = await getRecipeByLetter(params.letter);
       break;
     case params.ingredient !== undefined:
       recipe = await getRecipeByIngredient(params.ingredient);
@@ -118,7 +119,7 @@ export function Home() {
 }
 
 export function SearchByIngredient() {
-  const [ ingredient ] = useLocation().pathname.split('/').slice(-1);
+  const [ingredient] = useLocation().pathname.split('/').slice(-1);
 
   return (
     <>
@@ -152,7 +153,8 @@ export function SearchByName() {
   return (
     <>
       <h1 className="mb-4 text-4xl">nome</h1>
-      <SearchBar text={text} onTextChange={setText} onClick={() => { }} />
+      <SearchBar text={text} onTextChange={setText} />
+      <Outlet />
     </>
   )
 }
@@ -172,6 +174,7 @@ export function SearchByFirstLetter() {
           )
         }
       </div>
+      <Outlet />
     </>
   )
 }

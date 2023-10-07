@@ -1,4 +1,6 @@
-export function SearchBar({ text, onTextChange, onClick, placeholder }: { text: string; onTextChange: (text: string) => void; onClick?: () => void; placeholder?: string; }) {
+import { Link } from "react-router-dom";
+
+export function SearchBar({ text, onTextChange, placeholder }: { text: string; onTextChange: (text: string) => void; placeholder?: string; }) {
     return (
       <div className="flex gap-2">
         <input
@@ -8,13 +10,13 @@ export function SearchBar({ text, onTextChange, onClick, placeholder }: { text: 
           placeholder={placeholder}
           onChange={(e) => onTextChange(e.target.value)} />
   
-        {onClick !== undefined ?
-          (<button
+        {text !== undefined ?
+          (<Link
             className="relative self-center w-24 p-2 transition ease-in-out rounded-sm bg-zinc-950 hover:bg-zinc-300 hover:text-stone-800"
-            onClick={onClick}
+            to={text.replace(/ /g, '_')}
           >
             buscar
-          </button>) : null
+          </Link>) : null
         }
   
       </div>

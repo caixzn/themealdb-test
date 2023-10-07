@@ -19,18 +19,32 @@ const router = createBrowserRouter([
       {
         path: "nome",
         element: <SearchByName />,
-      },
-      {
-        path: "nome/:name",
-        element: <SearchByName />,
+        children: [
+          {
+            path: "",
+            element: <RecipeList />,
+          },
+          {
+            path: ":name",
+            element: <RecipeList />,
+            loader: RecipeLoader,
+          }
+        ]
       },
       {
         path: "primeira_letra",
         element: <SearchByFirstLetter />,
-      },
-      {
-        path: "primeira_letra/:letter",
-        element: <SearchByFirstLetter />,
+        children: [
+          {
+            path: "",
+            element: <RecipeList />,
+          },
+          {
+            path: ":letter",
+            element: <RecipeList />,
+            loader: RecipeLoader,
+          }
+        ]
       },
       {
         path: "igrediente_principal",

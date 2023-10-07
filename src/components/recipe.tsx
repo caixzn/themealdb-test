@@ -51,7 +51,10 @@ export function RecipeList({ recipes }: { recipes?: Recipe[]}) {
   }
 
   const data = useLoaderData() as Recipe[];
-  console.log(data);
+  if (!data) {
+    return "nenhuma receita encontrada";
+  }
+
   return (
     <div className="flex flex-wrap gap-4 my-6">
       {data.map((recipe) => (<RecipeCard key={recipe.idMeal} recipe={recipe} />))}
