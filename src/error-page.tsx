@@ -10,6 +10,9 @@ export default function ErrorPage() {
       <p className="text-xl text-stone-400">
         <i>{`${error.statusText}` || error.message}</i>
       </p>
+      <a href="/" className="flex flex-col items-center justify-center text-xl text-stone-400 hover:text-stone-500">
+        <span>início</span>
+      </a>
     </div>
   );
 }
